@@ -35,22 +35,6 @@ initMap = () => {
   });
 }
 
-/* window.initMap = () => {
-  fetchRestaurantFromURL((error, restaurant) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
-      self.map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 16,
-        center: restaurant.latlng,
-        scrollwheel: false
-      });
-      fillBreadcrumb();
-      DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
-    }
-  });
-} */
-
 /**
  * Get current restaurant from page URL.
  */
@@ -84,14 +68,18 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   name.innerHTML = restaurant.name;
 
   const address = document.getElementById('restaurant-address');
+  address.setAttribute('aria-label', `${restaurant.name} address`);
   address.innerHTML = restaurant.address;
 
   const image = document.getElementById('restaurant-img');
   image.className = 'restaurant-img'
+  image.setAttribute("alt", `${restaurant.name} snapshot`);
+  image.setAttribute("role", 'image');
   image.src = DBHelper.imageUrlForRestaurant(restaurant);
 
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
+  cuisine.setAttribute('aria-label', 'cuisine type');
 
   // fill operating hours
   if (restaurant.operating_hours) {
@@ -107,17 +95,27 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
 fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => {
   const hours = document.getElementById('restaurant-hours');
   for (let key in operatingHours) {
-    const row = document.createElement('tr');
+    let rowList = [];
+    let timeList = operatingHours[key].split(",");
+    timeList.forEach((timeString, index) => {
+      const row = document.createElement('tr');
+      row.setAttribute('role', 'row');
+      if(index === 0) {
+        const day = document.createElement('th');
+        day.innerHTML = key;
+        day.setAttribute('role', 'rowheader');
+        day.setAttribute("rowspan", timeList.length);
+        row.appendChild(day);
+      }
+      const time = document.createElement('td');
+      time.innerHTML = timeString;
+      time.setAttribute('role', 'cell');
+      time.setAttribute('aria-label', 'working hours')
+      row.appendChild(time);
+      rowList.push(row);
+    });
 
-    const day = document.createElement('td');
-    day.innerHTML = key;
-    row.appendChild(day);
-
-    const time = document.createElement('td');
-    time.innerHTML = operatingHours[key];
-    row.appendChild(time);
-
-    hours.appendChild(row);
+    rowList.forEach(row => hours.appendChild(row));
   }
 }
 
@@ -148,15 +146,16 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
  */
 createReviewHTML = (review) => {
   const li = document.createElement('li');
-  const name = document.createElement('p');
+  li.setAttribute('role', 'listitem');
+  const name = document.createElement('h4');
   name.innerHTML = review.name;
   li.appendChild(name);
 
-  const date = document.createElement('p');
+  const date = document.createElement('h4');
   date.innerHTML = review.date;
   li.appendChild(date);
 
-  const rating = document.createElement('p');
+  const rating = document.createElement('h4');
   rating.innerHTML = `Rating: ${review.rating}`;
   li.appendChild(rating);
 
